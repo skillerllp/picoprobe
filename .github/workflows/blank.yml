@@ -1,27 +1,27 @@
 name: Build DebugProbe UF2
 
 on:
-  workflow_dispatch:   # Manual trigger from Actions tab
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Checkout the official debugprobe repository
-    - name: Checkout debugprobe repo
+    # 1. Checkout debugprobe repo
+    - name: Checkout debugprobe
       uses: actions/checkout@v3
       with:
         repository: raspberrypi/debugprobe
-        submodules: recursive  # fetch Pico SDK
+        submodules: recursive  # ensures pico-sdk is included
 
     # 2. Install dependencies
-    - name: Install ARM GCC toolchain and build tools
+    - name: Install ARM GCC and build tools
       run: |
         sudo apt update
         sudo apt install -y gcc-arm-none-eabi cmake ninja-build build-essential git
 
-    # 3. Build debugprobe for Pico
+    # 3. Build debugprobe firmware
     - name: Build debugprobe_on_pico.uf2
       run: |
         mkdir -p build
@@ -29,7 +29,7 @@ jobs:
         cmake -DDEBUG_ON_PICO=ON -G Ninja ..
         ninja
 
-    # 4. Upload the resulting UF2 as an artifact
+    # 4. Upload UF2 as artifact
     - name: Upload UF2
       uses: actions/upload-artifact@v4
       with:
