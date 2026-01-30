@@ -1,4 +1,4 @@
-name: Build DebugProbe UF2
+name: Build DebugProbe UF2 (Optimized)
 
 on:
   workflow_dispatch:
@@ -9,27 +9,41 @@ jobs:
 
     steps:
     # 1. Checkout debugprobe repo
-    - name: Checkout debugprobe
-      uses: actions/checkout@v3
+    - uses: actions/checkout@v3
       with:
-        repository: raspberrypi/debugprobe
-        submodules: recursive  # ensures pico-sdk is included
+        submodules: recursive  # fetch Pico SDK once
 
-    # 2. Install dependencies
-    - name: Install ARM GCC and build tools
+    # 2. Set up caching for Pico SDK
+    - name: Cache Pico SDK
+      uses: actions/cache@v3
+      with:
+        path: external/pico-sdk
+        key: pico-sdk-${{ hashFiles('external/pico-sdk/**') }}
+        restore-keys: |
+          pico-sdk-
+
+    # 3. Set up caching for ARM toolchain
+    - name: Cache ARM GCC
+      uses: actions/cache@v3
+      with:
+        path: /usr/bin/arm-none-eabi-gcc
+        key: arm-gcc-11  # adjust if using a different version
+
+    # 4. Install dependencies
+    - name: Install ARM GCC, CMake, Ninja
       run: |
         sudo apt update
         sudo apt install -y gcc-arm-none-eabi cmake ninja-build build-essential git
 
-    # 3. Build debugprobe firmware
+    # 5. Build debugprobe firmware
     - name: Build debugprobe_on_pico.uf2
       run: |
         mkdir -p build
         cd build
-        cmake -DDEBUG_ON_PICO=ON -G Ninja ..
+        cmake -DDEBUG_ON_PICO=ON -DPICO_SDK_FETCH_FROM_GIT=ON -G Ninja ..
         ninja
 
-    # 4. Upload UF2 as artifact
+    # 6. Upload UF2 artifact
     - name: Upload UF2
       uses: actions/upload-artifact@v4
       with:
