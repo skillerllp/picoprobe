@@ -1,32 +1,33 @@
-name: Build Pico Probe
+name: Build Picoprobe UF2
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:   # allows manual trigger from GitHub Actions UI
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
+    # 1. Checkout repository
     - name: Checkout repository
       uses: actions/checkout@v3
-      with:
-        submodules: recursive
 
-    - name: Install toolchain
+    # 2. Install dependencies
+    - name: Install ARM toolchain
       run: |
         sudo apt update
-        sudo apt install -y gcc-arm-none-eabi cmake ninja-build build-essential
+        sudo apt install -y gcc-arm-none-eabi build-essential
 
-    - name: Build firmware
+    # 3. Build Picoprobe
+    - name: Build Picoprobe firmware
       run: |
-        mkdir -p build
-        cd build
-        cmake -G Ninja ..
-        ninja
+        cd src
+        make clean
+        make
 
+    # 4. Upload built UF2 as artifact
     - name: Upload UF2
       uses: actions/upload-artifact@v4
       with:
         name: picoprobe-uf2
-        path: build/*.uf2
+        path: src/*.uf2
