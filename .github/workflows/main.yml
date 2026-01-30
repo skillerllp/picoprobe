@@ -1,31 +1,32 @@
-name: Build Debug Probe
+name: Build Pico Probe
 
 on:
-  workflow_dispatch:   # allows manual trigger in UI
-  push:
-    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
 
-    - name: Set up toolchain
+    - name: Install toolchain
       run: |
         sudo apt update
-        sudo apt install -y gcc-arm-none-eabi cmake ninja-build
+        sudo apt install -y gcc-arm-none-eabi cmake ninja-build build-essential
 
-    - name: Build debugprobe for Pico
+    - name: Build firmware
       run: |
-        mkdir build
+        mkdir -p build
         cd build
-        cmake -DDEBUG_ON_PICO=ON -G Ninja ..
+        cmake -G Ninja ..
         ninja
 
-    - name: Upload artifact
+    - name: Upload UF2
       uses: actions/upload-artifact@v4
       with:
-        name: built-uf2
+        name: picoprobe-uf2
         path: build/*.uf2
